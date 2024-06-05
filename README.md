@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project implements an image similarity model using a simple convolutional neural network (CNN) with a contrastive loss function. The model is trained to learn embeddings for images such that similar images have embeddings close to each other, while dissimilar images have embeddings far apart. The performance of the model is evaluated using metrics like mean Average Precision (mAP) and Mean Rank.
+This project implements an image similarity model using a convolutional neural network (CNN) with a contrastive loss function. The model learns embeddings for images, where similar images have embeddings close to each other and dissimilar images have embeddings far apart. Performance is evaluated using metrics like mean Average Precision (mAP) and Mean Rank.
 
 ## Project Structure
 
@@ -22,21 +22,19 @@ This project implements an image similarity model using a simple convolutional n
 │   └── ...
 ├── train_image_info.json
 ├── test_image_info.json
-├── model.py
-├── train.py
-├── evaluate.py
+├── Shakir_IIT_Jodpur.ipynb
 └── README.md
 ```
 
-## Dataset
+### Dataset
 
-- `train/`: Directory containing training images.
-- `query_images/`: Directory containing query images.
-- `gallery/`: Directory containing gallery images.
-- `train_image_info.json`: JSON file containing the mapping of training image filenames to their labels.
-- `test_image_info.json`: JSON file containing the mapping of query and gallery image filenames to their labels.
+- **train/**: Directory containing training images.
+- **query_images/**: Directory containing query images.
+- **gallery/**: Directory containing gallery images.
+- **train_image_info.json**: JSON file mapping training image filenames to their labels.
+- **test_image_info.json**: JSON file mapping query and gallery image filenames to their labels.
 
-## Dependencies
+### Dependencies
 
 - Python 3.6+
 - torch
@@ -44,94 +42,73 @@ This project implements an image similarity model using a simple convolutional n
 - pillow
 - tqdm
 
-You can install the dependencies using pip:
+Dependencies can be installed using pip.
 
-```bash
-pip install torch torchvision pillow tqdm
-```
+### Image Transformations
 
-## Image Transformations
+Images are resized to 224x224 pixels, converted to tensors, and normalized to ensure uniform input for the model.
 
-Images are resized to 224x224 pixels, converted to tensors, and normalized using the following transformations:
+### Custom Dataset Class
 
-```python
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
-```
+A custom dataset class loads images and their corresponding labels from directories and JSON files.
 
-## Custom Dataset Class
+### Model Architecture
 
-A custom dataset class `ImageDataset` is defined to handle loading images and their corresponding labels from the specified directories and JSON files.
+The `ImageSimilarityModel` is a simple CNN with four convolutional layers followed by a fully connected layer producing 128-dimensional embeddings.
 
-## Model Architecture
+### Contrastive Loss
 
-The `ImageSimilarityModel` is a simple CNN with four convolutional layers followed by a fully connected layer to produce 128-dimensional embeddings.
+The contrastive loss function encourages the model to produce embeddings that are close for similar images and far apart for dissimilar images.
 
-## Contrastive Loss
+### Training and Evaluation
 
-The contrastive loss function encourages the model to produce embeddings that are close for similar images and far apart for dissimilar images. The loss is computed as:
-
-```python
-class ContrastiveLoss(nn.Module):
-    def __init__(self, margin=1.0):
-        super(ContrastiveLoss, self).__init__()
-        self.margin = margin
-
-    def forward(self, x1, x2, y):
-        distances = torch.sqrt(((x1 - x2) ** 2).sum(dim=1))
-        losses = y * distances ** 2 + (1 - y) * torch.clamp(self.margin - distances, min=0.0) ** 2
-        return losses.mean()
-```
-
-## Training
-
-The model is trained for a specified number of epochs using the Adam optimizer. During training, the embeddings for images in a batch are computed, and contrastive loss is used to update the model parameters.
-
-## Evaluation
-
-After training, the embeddings for query and gallery images are computed. The similarity scores between query and gallery embeddings are calculated, and the gallery images are ranked based on these scores. The evaluation metrics include mAP@1, mAP@10, mAP@50, and Mean Rank.
+Training and evaluation are both performed using the `Shakir_IIT_Jodpur.ipynb` notebook. This notebook initializes the dataset, dataloaders, model, criterion, and optimizer, and includes both the training loop and the evaluation process.
 
 ## Running the Code
 
-1. **Prepare the Dataset**: Organize your dataset directories (`train/`, `query_images/`, `gallery/`) and JSON files (`train_image_info.json`, `test_image_info.json`).
+1. **Prepare the Dataset**: Organize dataset directories (`train/`, `query_images/`, `gallery/`) and JSON files (`train_image_info.json`, `test_image_info.json`).
 
-2. **Train the Model**: Run `train.py` to train the model. This script initializes the dataset, dataloaders, model, criterion, and optimizer, and starts the training loop.
-
-```bash
-python train.py
-```
-
-3. **Evaluate the Model**: Run `evaluate.py` to compute the embeddings for query and gallery images, rank the gallery images, and compute the evaluation metrics.
-
-```bash
-python evaluate.py
-```
+2. **Run the Notebook**: Execute the `Shakir_IIT_Jodpur.ipynb` notebook to train and evaluate the model. This notebook covers all steps from loading data to training the model and evaluating its performance.
 
 ## Example Results
 
 After training and evaluation, the example output might look like:
 
-```
-Epoch 1/30, Loss: 0.693
-...
-Epoch 30/30, Loss: 0.123
-mAP@1: 0.067
-mAP@10: 0.067
-mAP@50: 0.067
-Mean Rank: 466.88
-```
+### Training Loss
+A plot showing the training loss decreasing over epochs, indicating model convergence.
 
-## Contributing
+### Evaluation Metrics
+- **mAP@1**: 0.069
+- **mAP@10**: 0.067
+- **mAP@50**: 0.067
+- **Mean Rank**: 22.86
 
-Feel free to open issues or submit pull requests if you find any bugs or want to add new features.
+### Visual Results
+
+1. **Loss Curve**: Shows the decrease in training loss over epochs, illustrating how well the model is learning.
+
+2. **Similarity Scores Histogram**: Displays the distribution of similarity scores, showing how well the model distinguishes between similar and dissimilar images.
+
+3. **Confusion Matrix**: Depicts the performance of top-1 predictions, providing insight into where the model might be making errors.
+
+4. **Precision-Recall Curve**: Graphs the precision vs. recall for the model, with the area under the curve (AUC) indicating the trade-off between precision and recall.
+
+5. **t-SNE Visualization**: Reduces the 128-dimensional embeddings to 2D space, showing clusters of similar images and the separation of dissimilar images.
+
+6. **ROC Curve**: Plots the true positive rate against the false positive rate, providing a visual measure of the model's performance at distinguishing between similar and dissimilar images.
+
+7. **Violin Plot**: Displays the distribution of embeddings across different dimensions and labels, offering a detailed view of the embeddings' spread and density.
+
+8. **K-Means Clustering**: Visualizes the clusters formed by K-Means on the t-SNE-reduced embeddings, showing how well the model groups similar images.
+
+9. **CMC Curve**: Cumulative Match Characteristic curve, showing the recognition rate at different top-k values, indicating how often the correct match is within the top-k ranked results.
+
+## Conclusion
+
+This project successfully demonstrates the use of a CNN with contrastive loss for image similarity tasks. By training the model to learn effective image embeddings, it achieves reasonable performance in distinguishing between similar and dissimilar images. The evaluation metrics and visual results indicate the model's capability in embedding learning and similarity assessment, providing a solid foundation for further improvements and applications in image retrieval systems.
 
 ## License
 
 This project is licensed under the MIT License.
 
----
-
-This README provides a detailed overview of the project, including dataset preparation, model architecture, training, evaluation, and example results. Follow the instructions to set up the environment, train the model, and evaluate its performance.
+Feel free to open issues or submit pull requests for bugs or new features.
